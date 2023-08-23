@@ -16,7 +16,7 @@ from io import BytesIO
 from utils.audio_gen.play_audio import text2audio
 
 from utils.prompt_config_l import *
-from utils.tools import transverse_on_json,extract_json_from_string,json2file,get_project_path
+from utils.tools import transverse_on_json,extract_json_from_string,json2file,get_project_path,json2md
 from utils.prompt_config import summary_chat_prompt
 from utils.audio_gen.input_audio import js_code
 
@@ -54,16 +54,16 @@ if 'gen_keymiss' not in st.session_state:
     st.session_state['gen_keymiss'] =[]
 
 if 'yuangao_data' not in st.session_state:
-    st.session_state['yuangao_data'] ={'姓名': None, '性别': None, '出生日期': None, '民族': None, '住址': None, '联系方式': None, '委托诉讼代理人': {'姓名': None, '事务所': None}}
+    st.session_state['yuangao_data'] ={'姓名': None, '性别': None, '出生日期': None, '民族': None, '住址': None, '联系方式': None, '身份证号': None, '法定代理人':None, '委托诉讼代理人': {'姓名': None, '事务所': None}}
 
 if 'beigao_data' not in st.session_state:
-    st.session_state['beigao_data'] ={'姓名': None, '性别': None, '出生日期': None, '民族': None, '住址': None, '联系方式': None, '委托诉讼代理人': {'姓名': None, '事务所': None}}
+    st.session_state['beigao_data'] ={'姓名': None, '性别': None, '出生日期': None, '民族': None, '住址': None, '联系方式': None, '身份证号': None, '法定代理人':None, '委托诉讼代理人': {'姓名': None, '事务所': None}}
 
 if 'yuangao_company_data' not in st.session_state:
-    st.session_state['yuangao_company_data'] ={ "公司名称": None, "公司所在地":  None,"法人": { "姓名": None, "职务": None, "联系方式": None},"委托诉讼代理人": {"姓名": None,"事务所": None}}
+    st.session_state['yuangao_company_data'] ={ "公司名称": None, "公司所在地":  None, '统一社会信用代码': None, "法人": { "姓名": None, "职务": None, "联系方式": None},"委托诉讼代理人": {"姓名": None,"事务所": None}}
 
 if 'beigao_company_data' not in st.session_state:
-    st.session_state['beigao_company_data'] ={ "公司名称": None, "公司所在地":  None,"法人": { "姓名": None, "职务": None, "联系方式": None},"委托诉讼代理人": {"姓名": None,"事务所": None}}
+    st.session_state['beigao_company_data'] ={ "公司名称": None, "公司所在地":  None, '统一社会信用代码': None, "法人": { "姓名": None, "职务": None, "联系方式": None},"委托诉讼代理人": {"姓名": None,"事务所": None}}
 
 if 'second_state' not in st.session_state:
     st.session_state['second_state'] = False
@@ -92,8 +92,12 @@ if "is_person"not in st.session_state:
 if "is_company"not in st.session_state:
     st.session_state['is_company'] = False
 
-if 'agent_flag' not in st.session_state:
-    st.session_state['agent_flag'] = False
+if 'agent_flag_1' not in st.session_state:
+    st.session_state['agent_flag_1'] = False
+
+if 'agent_flag_2' not in st.session_state:
+    st.session_state['agent_flag_2'] = False
+
 
 if 'prompt2usr' not in st.session_state:
     st.session_state['prompt2usr'] = ""
@@ -101,6 +105,11 @@ if 'prompt2usr' not in st.session_state:
 if "cause_of_action" not in st.session_state:
     st.session_state['cause_of_action'] = ['机动车交通事故责任纠纷', '民间借贷纠纷', '离婚纠纷']
 
+if "input_count" not in st.session_state:
+    st.session_state['input_count'] = 0
+
+if "last_gen_keymiss" not in st.session_state:
+    st.session_state['last_gen_keymiss'] = 0
 
 def clear_chat_history():
     temp = st.session_state['current_chat']
@@ -112,16 +121,17 @@ def clear_chat_history():
     st.session_state['third_state'] = False
     st.session_state['fourth_state'] = False
     st.session_state['third_state_step'] = 1
-    st.session_state['yuangao_data'] ={'姓名': None, '性别': None, '出生日期': None, '民族': None, '住址': None, '联系方式': None, '委托诉讼代理人': {'姓名': None, '事务所': None}}
-    st.session_state['beigao_data'] ={'姓名': None, '性别': None, '出生日期': None, '民族': None, '住址': None, '联系方式': None, '委托诉讼代理人': {'姓名': None, '事务所': None}}
-    st.session_state['yuangao_company_data'] ={ "公司名称": None, "公司所在地":  None,"法人": { "姓名": None, "职务": None, "联系方式": None},"委托诉讼代理人": {"姓名": None,"事务所": None}}
-    st.session_state['beigao_company_data'] ={ "公司名称": None, "公司所在地":  None,"法人": { "姓名": None, "职务": None, "联系方式": None},"委托诉讼代理人": {"姓名": None,"事务所": None}}
+    st.session_state['yuangao_data'] ={'姓名': None, '性别': None, '出生日期': None, '民族': None, '住址': None, '联系方式': None, '身份证号': None, "法定代理人": None, '委托诉讼代理人': {'姓名': None, '事务所': None}}
+    st.session_state['beigao_data'] ={'姓名': None, '性别': None, '出生日期': None, '民族': None, '住址': None, '联系方式': None, '身份证号': None, "法定代理人": None, '委托诉讼代理人': {'姓名': None, '事务所': None}}
+    st.session_state['yuangao_company_data'] ={ "公司名称": None, "公司所在地":  None, '统一社会信用代码': None, "法人": { "姓名": None, "职务": None, "联系方式": None},"委托诉讼代理人": {"姓名": None,"事务所": None}}
+    st.session_state['beigao_company_data'] ={ "公司名称": None, "公司所在地":  None, '统一社会信用代码': None, "法人": { "姓名": None, "职务": None, "联系方式": None},"委托诉讼代理人": {"姓名": None,"事务所": None}}
     st.session_state['third_state_data'] = {"案由": None, "诉讼请求": None, "事实理由": None, "证据": None, "法院":None, "日期": formattime}
     st.session_state['yuangao_list'] = []
     st.session_state['beigao_list'] = []
     st.session_state['is_person'] = False
     st.session_state['is_company'] = False
-    st.session_state['agent_flag'] = False
+    st.session_state['agent_flag_1'] = False
+    st.session_state['agent_flag_2'] = False
     st.session_state['prompt2usr'] = ""
     st.session_state['gen_keyget'] =[]
 
@@ -172,15 +182,17 @@ def judge_p_c(res_judge):
     
 def check_miss(data):
     keyget = []
-    if st.session_state['agent_flag']:
-        print("\n\n")
-        print("******")
-        print(data)
-        print("******")
+    if st.session_state['agent_flag_1']:
         if "委托诉讼代理人" in data and "姓名" in data["委托诉讼代理人"]:
             if data["委托诉讼代理人"]["姓名"] is None:
                 data["委托诉讼代理人"] = "无"
-    st.session_state['agent_flag'] = False
+        st.session_state['agent_flag_1'] = False
+
+    if st.session_state['agent_flag_2']:
+        if "法定代理人" in data:
+            if data["法定代理人"] is None:
+                data["法定代理人"] = "无"
+        st.session_state['agent_flag_2'] = False
 
     if isinstance(data,dict):
         keyget,keymiss=transverse_on_json(data)
@@ -217,15 +229,15 @@ def excute_fourth():
 def excute_third():
     # 输入诉讼请求
     if st.session_state['third_state_step'] == 1:  
-        res_answer="好的，我已经知道您的上诉请求了。**"+ st.session_state['category'] +"**的**事实和理由**提示如下：\n\n"
+        res_answer="好的，我已经知道您的诉讼请求了，根据您的案由与诉讼请求，我为您生成了一份事实与理由模板：\n\n"
         if st.session_state['category'] == "民间借贷纠纷":
-            res_answer += debt_usr_reason_prompt + "\n\n **请根据上述提示输入您的事实和理由。**"
+            res_answer += debt_usr_reason_prompt + "\n\n **请参考以上模板输入您的事实和理由。**"
             prompt = debt_usr_request_prompt
         if st.session_state['category'] == "机动车交通事故责任纠纷":
-            res_answer += traffic_usr_reason_prompt + "\n\n **请根据上述提示输入您的事实和理由。**"
+            res_answer += traffic_usr_reason_prompt + "\n\n **请参考以上模板输入您的事实和理由。**"
             prompt = traffic_usr_request_prompt
         if st.session_state['category'] == "离婚纠纷":
-            res_answer += divorce_usr_reason_prompt + "\n\n **请根据上述提示输入您的事实和理由。**"
+            res_answer += divorce_usr_reason_prompt + "\n\n **请参考以上模板输入您的事实和理由。**"
             prompt = divorce_usr_request_prompt
         new_prompt_json={'role': 'user', 'content': prompt+guide_second_step1+st.session_state.prompt}
         st.session_state['third_state_data']["诉讼请求"]=api.main([new_prompt_json])
@@ -300,13 +312,15 @@ def excute_second():
         
         if res_1_2==1:
             st.session_state['is_person']=True
-            res_answer="好的，请先告诉我你被告人的姓名、性别、出生日期、民族、住址、联系方式、委托诉讼代理人的姓名和事务所"
-            st.session_state['gen_keymiss'] =["姓名", "性别", "出生日期", "民族", "住址","联系方式","委托诉讼代理人" ]
+            res_answer="谢谢您提供的信息！\n\n请告诉我 **自然人（个人）** 的如下信息\n* 姓名\n* 身份证号\n* 性别\n* 出生日期\n* 民族\n* 住址\n* 联系方式\n * 委托代理人（如有）\n * 法定代理人（如有）"
+            st.session_state['gen_keymiss'] =["姓名", "性别", "出生日期", "民族", "住址","联系方式","委托诉讼代理人","身份证号","法定代理人"]
+            st.session_state['last_gen_keymiss']=st.session_state['gen_keymiss']
             st.session_state['gen_keyget'] =[]
         elif res_1_2==2:
             st.session_state['is_company']=True
-            res_answer="好的，请先告诉我你的被告公司名称、公司所在地、法人、公司委托诉讼代理人的姓名和事务所"
-            st.session_state['gen_keymiss'] =["公司名称", "公司所在地","法人","委托诉讼代理人"]
+            res_answer="谢谢您提供的信息！\n\n请先告诉我 **非自然人（公司）** 的如下信息：\n* 公司名称\n* 统一社会信用代码\n *公司所在地\n* 法人的姓名、职务、联系方式"
+            st.session_state['gen_keymiss'] =["公司名称", "公司所在地","法人","委托诉讼代理人","统一社会信用代码"]
+            st.session_state['last_gen_keymiss']=st.session_state['gen_keymiss']
             st.session_state['gen_keyget'] =[]
         else:
             st.session_state['is_person']=False
@@ -315,16 +329,32 @@ def excute_second():
     
     elif st.session_state['is_person']==True and st.session_state['is_company']==False:
               
-        new_prompt_json={'role': 'user', 'content': gudie_beigao_person_json+st.session_state["prompt2usr"]+st.session_state.promp}
+        new_prompt_json={'role': 'user', 'content': gudie_beigao_person_json+st.session_state["prompt2usr"]+st.session_state.prompt}
         res_json = api.main([new_prompt_json])
         data=extract_json_from_string(res_json)
         check_miss(data)
-
+        if st.session_state['last_gen_keymiss']==st.session_state['gen_keymiss']:
+            st.session_state['input_count']+=1
+        else:
+            st.session_state['input_count']=0
+        if st.session_state['input_count']==3:
+            st.session_state['input_count']=0
+            for x in st.session_state['gen_keymiss']:
+                st.session_state['beigao_data'][x]="无"
+            st.session_state['beigao_list'].append(st.session_state['beigao_data'])
+            st.session_state['is_person']=True
+            st.session_state['is_company']=True
+            res_answer="亲，发现您多次没有提供有效的"+','.jion(st.session_state['gen_keymiss'])+"信息，先帮你跳过吧！我已经知道第"+str(len(st.session_state['beigao_list']))+"个被告的信息了\n 请问你是否继续添加**被告**信息呢"
+            return res_answer
+        
         if len(st.session_state['gen_keymiss'])!=0:
             # res_answer="现在还不知道您的被告人的"+'，'.join(st.session_state['gen_keymiss'])+"信息，您能告诉我吗？"
             if "委托诉讼代理人" in st.session_state['gen_keymiss']:
-                st.session_state['agent_flag'] = True
-                res_answer="请问您的被告人是否有委托代理人？"
+                st.session_state['agent_flag_1'] = True
+                res_answer="请问自然人是否有**委托代理人**？"
+            elif "法定代理人" in st.session_state['gen_keymiss']:
+                st.session_state['agent_flag_2'] = True
+                res_answer="请问自然人是否有**法定代理人**？"
             else:
                 res_answer="现在还不知道您的"+'，'.join(st.session_state['gen_keymiss'])+"信息，您能告诉我吗？"
         
@@ -340,9 +370,22 @@ def excute_second():
         res_json = api.main([new_prompt_json])
         data=extract_json_from_string(res_json)
         check_miss(data)
+        if st.session_state['last_gen_keymiss']==st.session_state['gen_keymiss']:
+            st.session_state['input_count']+=1
+        else:
+            st.session_state['input_count']=0
+        if st.session_state['input_count']==3:
+            st.session_state['input_count']=0
+            for x in st.session_state['gen_keymiss']:
+                st.session_state['beigao_company_data'][x]="无"
+            st.session_state['beigao_list'].append(st.session_state['beigao_company_data'])
+            st.session_state['is_person']=True
+            st.session_state['is_company']=True
+            res_answer="亲，发现您多次没有提供有效的"+','.jion(st.session_state['gen_keymiss'])+"信息，先帮你跳过吧！我已经知道第"+str(len(st.session_state['beigao_list']))+"个被告的信息了\n 请问你是否继续添加**被告**信息呢"
+            return res_answer
         if len(st.session_state['gen_keymiss'])!=0:
             if "委托诉讼代理人" in st.session_state['gen_keymiss']:
-                st.session_state['agent_flag'] = True
+                st.session_state['agent_flag_1'] = True
                 res_answer="请问被告公司是否有委托代理人？"
             else:
                 res_answer="现在还不知道被告公司的"+'，'.join(st.session_state['gen_keymiss'])+"信息，您能告诉我吗？"
@@ -399,6 +442,7 @@ def excute_second():
                 st.session_state['gen_keymiss']=["案由", "诉讼请求", "事实理由", "证据", "法院", "日期"]
                 st.session_state['gen_keyget'] =[]
                 # res_answer="能进一步给出您的**事实和理由**吗？"
+                st.sidebar.write('🖊️ 当前任务：'+st.session_state['category'])
                 res_answer = "目前您的案由是**" + st.session_state['category']
                 # 获取案由的提示信息
                 if st.session_state['third_state_data']["案由"] in st.session_state['cause_of_action']:
@@ -410,19 +454,7 @@ def excute_second():
                         res_answer += "**,提示如下：\n\n" + divorce_usr_request_prompt + "\n\n **请根据上述提示输入您的上诉请求。**"
                 else:
                     res_answer+=",请继续输入您的诉讼请求。"
-                # st.session_state['third_state_step'] = 1
 
-    # if st.session_state['third_state']:
-    #     res_answer = "目前您的案由是**" + st.session_state['category']
-    #     # 获取案由的提示信息
-    #     if st.session_state['third_state_data']["案由"] in st.session_state['cause_of_action']:
-    #         if st.session_state['category'] == "民间借贷":
-    #             res_answer += "**,提示如下：\n\n" + debt_usr_request_prompt + "\n\n **请根据上述提示输入您的上诉请求。**"
-    #         if st.session_state['category'] == "机动车交通事故责任纠纷":
-    #             res_answer += "**,提示如下：\n\n" + traffic_usr_request_prompt + "\n\n **请根据上述提示输入您的上诉请求。**"
-    #         if st.session_state['category'] == "离婚纠纷":
-    #             res_answer += "**,提示如下：\n\n" + divorce_usr_request_prompt + "\n\n **请根据上述提示输入您的上诉请求。**"
-    #     st.session_state['third_state_step'] = 1
 
     return res_answer
 
@@ -441,13 +473,15 @@ def excute_first():
             res_1_2=3
         if res_1_2==1:
             st.session_state['is_person']=True
-            res_answer="谢谢您提供的信息！\n\n请告诉我**自然个人**的如下信息\n* 姓名\n* 性别\n* 出生日期\n* 民族\n* 住址\n* 联系方式"
-            st.session_state['gen_keymiss'] =["姓名", "性别", "出生日期", "民族", "住址","联系方式","委托诉讼代理人" ]
+            res_answer="谢谢您提供的信息！\n\n请告诉我 **自然人（个人）** 的如下信息\n* 姓名\n* 身份证号\n* 性别\n* 出生日期\n* 民族\n* 住址\n* 联系方式\n * 委托代理人（如有）\n * 法定代理人（如有）"
+            st.session_state['gen_keymiss'] =["姓名", "性别", "出生日期", "民族", "住址","联系方式","委托诉讼代理人","身份证号", "法定代理人" ]
+            st.session_state['last_gen_keymiss']=st.session_state['gen_keymiss']
             st.session_state['gen_keyget'] =[]
         elif res_1_2==2:
             st.session_state['is_company']=True
-            res_answer="谢谢您提供的信息！\n\n请先告诉我**非自然人（公司）**的如下信息：\n* 公司名称\n* 公司所在地\n* 法人的姓名、职务、联系方式"
-            st.session_state['gen_keymiss'] =["公司名称", "公司所在地","法人","委托诉讼代理人"]
+            res_answer="谢谢您提供的信息！\n\n请先告诉我 **非自然人（公司）** 的如下信息：\n* 公司名称\n* 统一社会信用代码\n * 公司所在地\n* 法人的姓名、职务、联系方式"
+            st.session_state['gen_keymiss'] =["公司名称", "公司所在地","法人","委托诉讼代理人", "统一社会信用代码"]
+            st.session_state['last_gen_keymiss']=st.session_state['gen_keymiss']
             st.session_state['gen_keyget'] =[]
         else:
             st.session_state['is_person']=False 
@@ -456,22 +490,39 @@ def excute_first():
     elif st.session_state['is_person']==True and st.session_state['is_company']==False:
         new_prompt_json={'role': 'user', 'content': gudie_yuangao_person_json+st.session_state['prompt2usr']+st.session_state.prompt}
         res_json = api.main([new_prompt_json])
-        print("-----------")
-        print(res_json)
-        print("-----------")
         data=extract_json_from_string(res_json)
         check_miss(data)
+        if st.session_state['last_gen_keymiss']==st.session_state['gen_keymiss']:
+            st.session_state['input_count']+=1
+        else:
+            st.session_state['input_count']=0
+        if st.session_state['input_count']==3:
+            st.session_state['input_count']=0
+            for x in st.session_state['gen_keymiss']:
+                st.session_state['yuangao_data'][x]="无"
+            st.session_state['yuangao_list'].append(st.session_state['yuangao_data'])
+            st.session_state['is_person']=True
+            st.session_state['is_company']=True
+            res_answer="亲，发现您多次没有提供有效的"+','.jion(st.session_state['gen_keymiss'])+"信息，先帮你跳过吧！我已经知道第"+str(len(st.session_state['yuangao_list']))+"个被告的信息了\n 请问你是否继续添加**原告**信息呢"
+            return res_answer
         if len(st.session_state['gen_keymiss'])!=0:
             if "委托诉讼代理人" in st.session_state['gen_keymiss']:
-                st.session_state['agent_flag'] = True
-                res_answer="请问您是否有**委托代理人**？"
+                st.session_state['agent_flag_1'] = True
+                res_answer="请问自然人是否有**委托代理人**？"
+            elif "法定代理人" in st.session_state['gen_keymiss']:
+                st.session_state['agent_flag_2'] = True
+                res_answer="请问自然人是否有**法定代理人**？"
             else:
                 res_answer="现在还不知道您的"+'，'.join(st.session_state['gen_keymiss'])+"信息，您能告诉我吗？"
         
         else:
             st.session_state['yuangao_list'].append(st.session_state['yuangao_data'])
-            duo_yuangao="好的，我已经知道第"+str(len(st.session_state['yuangao_list']))+"个原告的信息了，请问你是否需要继续添加原告信息？"
-            res_answer= duo_yuangao #+"现在的原告的json文件如下"+json.dumps(st.session_state['yuangao_list'],ensure_ascii=False)
+            duo_yuangao="好的，我已经知道**第"+str(len(st.session_state['yuangao_list']))+"个原告**的信息了，请问你是否需要继续添加**原告**信息？"
+            json_data = json.dumps(st.session_state['yuangao_list'],ensure_ascii=False)
+            print(json_data)
+            json_data = json2md(json_data)
+            res_answer= duo_yuangao+"现在的原告的json文件如下"+ json_data
+
             st.session_state['is_person']=True
             st.session_state['is_company']=True
 
@@ -483,16 +534,33 @@ def excute_first():
         print("-----------")
         data=extract_json_from_string(res_json)
         check_miss(data)
+        if st.session_state['last_gen_keymiss']==st.session_state['gen_keymiss']:
+            st.session_state['input_count']+=1
+        else:
+            st.session_state['input_count']=0
+        if st.session_state['input_count']==3:
+            st.session_state['input_count']=0
+            for x in st.session_state['gen_keymiss']:
+                st.session_state['yuangao_company_data'][x]="无"
+            st.session_state['yuangao_list'].append(st.session_state['yuangao_company_data'])
+            st.session_state['is_person']=True
+            st.session_state['is_company']=True
+            res_answer="亲，发现您多次没有提供有效的"+','.jion(st.session_state['gen_keymiss'])+"信息，先帮你跳过吧！我已经知道第"+str(len(st.session_state['yuangao_list']))+"个被告的信息了\n 请问你是否继续添加**原告**信息呢"
+            return res_answer
         if len(st.session_state['gen_keymiss'])!=0:
             if "委托诉讼代理人" in st.session_state['gen_keymiss']:
-                st.session_state['agent_flag'] = True
+                st.session_state['agent_flag_1'] = True
                 res_answer="请问您是否有**委托代理人**？"
             else:
                 res_answer="现在还不知道您的"+'，'.join(st.session_state['gen_keymiss'])+"信息，您能告诉我吗？"
         else:
             st.session_state['yuangao_list'].append(st.session_state['yuangao_company_data'])
             duo_yuangao="好的，我已经知道第"+str(len(st.session_state['yuangao_list']))+"个原告的信息了，请问你是否需要继续添加原告信息"
-            res_answer= duo_yuangao+"现在的原告的json文件如下"+json.dumps(st.session_state['yuangao_list'],ensure_ascii=False)
+           
+            json_data = json.dumps(st.session_state['yuangao_list'],ensure_ascii=False)
+            json_data = json2md(json_data)
+            res_answer= duo_yuangao+"现在的原告的json文件如下"+ json_data
+
             st.session_state['is_person']=True
             st.session_state['is_company']=True
     elif st.session_state['is_person']==True and st.session_state['is_company']==True:
@@ -514,9 +582,11 @@ def excute_first():
     return res_answer
 
 def on_input_change():
+
     if len(st.session_state.user_input)==0:
         # 这种对应的情况是无端的空白输入变化，将空白信息输出了
         return
+
     st.session_state['prompt'] = st.session_state['user_input']
     st.session_state['user_input'] = ''
 
@@ -605,3 +675,5 @@ if not st.session_state.is_audio_input:
             wav_bytes = text2audio(msg['content'],os.path.join(project_path,'output','output.wav') )
             st.audio(wav_bytes, format="audio/wav", start_time=0)
         st.session_state['message_keys'] += 1
+
+    

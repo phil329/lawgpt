@@ -161,7 +161,7 @@ option = st.sidebar.selectbox(
     '🙋如果确定，请选择要生成诉讼文书的案由',
     options)
 st.session_state['category'] = option
-st.sidebar.write('🖊️ 当前任务：'+st.session_state['category'])
+record = st.sidebar.write('🖊️ 当前任务：'+st.session_state['category'])
 
 def judge_p_c(res_judge):
     for x in res_judge:
@@ -316,7 +316,7 @@ def excute_second():
     
     elif st.session_state['is_person']==True and st.session_state['is_company']==False:
               
-        new_prompt_json={'role': 'user', 'content': gudie_beigao_person_json+st.session_state["prompt2usr"]+st.session_state.promp}
+        new_prompt_json={'role': 'user', 'content': gudie_beigao_person_json+st.session_state["prompt2usr"]+st.session_state.prompt}
         res_json = api.main([new_prompt_json])
         data=extract_json_from_string(res_json)
         check_miss(data)
@@ -401,6 +401,7 @@ def excute_second():
                 st.session_state['gen_keyget'] =[]
                 # res_answer="能进一步给出您的**事实和理由**吗？"
                 res_answer = "目前您的案由是**" + st.session_state['category']
+                record = st.sidebar.write('🖊️ 当前任务：'+st.session_state['category'])
                 # 获取案由的提示信息
                 if st.session_state['third_state_data']["案由"] in st.session_state['cause_of_action']:
                     if st.session_state['category'] == "民间借贷纠纷":

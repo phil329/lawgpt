@@ -3,6 +3,14 @@ import os
 import json
 import pandas as pd
 
+law_claim = '免责声明：本文档是由人工智能语言模型生成的文本,我们无法保证生成的文本完全准确、完整或适用于特定目的。任何使用本文档的个人或组织应该自行判断并承担使用本文档所产生的风险。'
+
+def json2md(json_data):
+    markdown_text = "| 名称   | 内容            |\n"
+    markdown_text += "|-------|------------------|\n"
+    for key, value in json_data.items():
+        markdown_text += f"| {key}  | {value}{' ' * (18 - len(str(value)))}|\n"
+
 
 def get_project_path(project_name='lawgpt_cp'):
 	# 获取当前文件的绝对路径
