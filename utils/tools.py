@@ -55,6 +55,8 @@ def extract_json_from_string(text,outfile=None):
     请注意，上述示例假定只有一个有效的JSON文本。如果存在多个JSON文本，将只提取第一个匹配项。
     
     '''
+    text = text.replace("None", "null").replace("none", "null")
+
     patterns = [r'```json([\s\S]*)```',r'({[\s\S]*})',]
 
     for pa in patterns:
@@ -108,40 +110,8 @@ def transverse_on_json(json_data):
 
 if __name__ == '__main__':
     text = ''' hel{"text":"school","name":"lily"}'''
-    text = '''
-    res_json 根据您提供的信息，我建议您继续提供关于您的住址、联系方式根据和委托诉讼代理人的详细信息客户的描述，我们可以提取。关键信息如下：
-这将有助于我们更好地了解您的案件情况并为您提供更专业的法律服务。姓名：王大锤
-性别：男
-请告诉我您的住址、联系方式和委托诉讼代理人的姓名和事务所。出生日期：1987年10月10日
-民族：无（未提及）
-住址：省份：甘肃省；城市：平凉市；区/县：静宁县；其他：无（未提及）
-联系方式：无（未提及）
-委托诉讼代理人：姓名：无（未提及）；事务所：无（未提及）
-
-
-将这些信息填充到json文件中，得到以下内容：
-
-
-```json
-{
-  "姓名": "王大锤",
-  "性别": "男",
-  "出生日期": "1987年10月10日",
-  "民族": null,
-  "住址": {
-    "省份": "甘肃省",
-    "城市": "平凉市",
-    "区/县": "静宁县",
-    "其他": null
-  },
-  "联系方式": null,
-  "委托诉讼代理人": {
-    "姓名": null,
-    "事务所": null
-  }
-}
-```
-'''
+    text = person_json_template="""{ "姓名": null, "性别": null, "出生日期": null, "民族": null, "住址": null, "联系方式": null, "身份证号": null, "法定代理人": {"姓名": null, "性别": null, "出生日期": null, "民族": null, "住址": null, "联系方式": null, "身份证号": null}, 委托诉讼代理人": { "姓名": null, "事务所": null } }"""
+# 
 
     # status = extract_json_from_string(text,'output.json')
     # with open('output.json','r') as f:
@@ -155,5 +125,5 @@ if __name__ == '__main__':
     # print(miss)
     data = '{"住址": "河北省保定市阳光大街与东风路交叉口仁和公寓底商第12号"}'
 
-    a = extract_json_from_string(data)["住址"]
+    a = extract_json_from_string(text)
     print(a)

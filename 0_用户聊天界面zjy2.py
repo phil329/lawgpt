@@ -101,12 +101,6 @@ if 'prompt2usr' not in st.session_state:
 if "cause_of_action" not in st.session_state:
     st.session_state['cause_of_action'] = ['机动车交通事故责任纠纷', '民间借贷纠纷', '离婚纠纷']
 
-if "input_count" not in st.session_state:
-    st.session_state['input_count'] = 0
-
-if "last_gen_keymiss" not in st.session_state:
-    st.session_state['last_gen_keymiss'] = 0
-
 
 def clear_chat_history():
     temp = st.session_state['current_chat']
@@ -182,10 +176,16 @@ def check_miss(data):
         print("\n\n")
         print("******")
         print(data)
-        print("******")
+        print("******\n\n")
         if "委托诉讼代理人" in data and "姓名" in data["委托诉讼代理人"]:
             if data["委托诉讼代理人"]["姓名"] is None:
                 data["委托诉讼代理人"] = "无"
+        if "法定代理人" in data:
+            print("Flag\n\n")
+            print(data["法定代理人"])
+            if data["法定代理人"] is None:
+                data["法定代理人"] = "无"
+            print(data["法定代理人"])
     st.session_state['agent_flag'] = False
 
     if isinstance(data,dict):
@@ -318,10 +318,9 @@ def excute_second():
             st.session_state['is_person']=False
             st.session_state['is_company']=False
             res_answer="不好意思，我不太清楚您的意思，请问被告的是个人还是公司呢"     
-    
     elif st.session_state['is_person']==True and st.session_state['is_company']==False:
               
-        new_prompt_json={'role': 'user', 'content': gudie_beigao_person_json+st.session_state["prompt2usr"]+st.session_state.prompt}
+        new_prompt_json={'role': 'user', 'content': gudie_beigao_person_json+st.session_state["prompt2usr"]+st.session_state.promp}
         res_json = api.main([new_prompt_json])
         data=extract_json_from_string(res_json)
         check_miss(data)
@@ -330,7 +329,7 @@ def excute_second():
             # res_answer="现在还不知道您的被告人的"+'，'.join(st.session_state['gen_keymiss'])+"信息，您能告诉我吗？"
             if "委托诉讼代理人" in st.session_state['gen_keymiss']:
                 st.session_state['agent_flag'] = True
-                res_answer="请问您的被告人是否有委托代理人？"
+                res_answer="请问您的被告人是否有委托代理人或法定代理人？"
             else:
                 res_answer="现在还不知道您的"+'，'.join(st.session_state['gen_keymiss'])+"信息，您能告诉我吗？"
         
@@ -340,7 +339,6 @@ def excute_second():
             res_answer= duo_yuangao+"现在的被告的json文件如下"+json.dumps(st.session_state['beigao_list'],ensure_ascii=False)
             st.session_state['is_person']=True
             st.session_state['is_company']=True
-    
     elif st.session_state['is_person']==False and st.session_state['is_company']==True:
         new_prompt_json={'role': 'user', 'content': gudie_beigao_company_json+st.session_state["prompt2usr"]+st.session_state.prompt}
         res_json = api.main([new_prompt_json])
@@ -379,7 +377,6 @@ def excute_second():
             elif st.session_state['category']=="我不太清楚诶" and st.session_state['third_state_data']["案由"]=="不清楚":
                 new_prompt_json={'role': 'user', 'content': gudie_second_step0+st.session_state.prompt}
                 anyou_str=api.main([new_prompt_json])
-                # print(anyou_str)
                 anyou=extract_json_from_string(anyou_str)["案由"]
                 st.session_state['third_state_data']["案由"]=anyou
                 res_answer="好的，已帮您识别案由为"+anyou
@@ -462,17 +459,17 @@ def excute_first():
     elif st.session_state['is_person']==True and st.session_state['is_company']==False:
         new_prompt_json={'role': 'user', 'content': gudie_yuangao_person_json+st.session_state['prompt2usr']+st.session_state.prompt}
         res_json = api.main([new_prompt_json])
-        print("-----------")
-        print(res_json)
-        print("-----------")
         data=extract_json_from_string(res_json)
         check_miss(data)
         if len(st.session_state['gen_keymiss'])!=0:
             if "委托诉讼代理人" in st.session_state['gen_keymiss']:
                 st.session_state['agent_flag'] = True
-                res_answer="请问您是否有**委托代理人**？"
+                res_answer="请问自然人是否有**委托代理人**？"
+            elif "法定代理人" in st.session_state['gen_keymiss']:
+                st.session_state['agent_flag'] = True
+                res_answer="请问自然人是否有**法定代理人**？"
             else:
-                res_answer="现在还不知道您的"+'，'.join(st.session_state['gen_keymiss'])+"信息，您能告诉我吗？"
+                res_answer="现在还不知道自然人的"+'，'.join(st.session_state['gen_keymiss'])+"信息，您能告诉我吗？"
         
         else:
             st.session_state['yuangao_list'].append(st.session_state['yuangao_data'])
@@ -481,14 +478,9 @@ def excute_first():
             st.session_state['is_person']=True
             st.session_state['is_company']=True
 
-        st.session_state['last_gen_keymiss']=st.session_state['gen_keymiss']
-
     elif st.session_state['is_person']==False and st.session_state['is_company']==True:
         new_prompt_json={'role': 'user', 'content': gudie_yuangao_company_json+st.session_state["prompt2usr"]+st.session_state.prompt}
         res_json = api.main([new_prompt_json])
-        print("-----------")
-        print(res_json)
-        print("-----------")
         data=extract_json_from_string(res_json)
         check_miss(data)
         if len(st.session_state['gen_keymiss'])!=0:
@@ -529,6 +521,9 @@ def on_input_change():
 
     st.session_state['prompt'] = st.session_state['user_input']
     st.session_state['user_input'] = ''
+    st.session_state['audio_input'] = dict(content='', session=0)  
+    st.session_state['audio_result'] = None  
+
 
     st.session_state['current_chat'].append({"role": "user", "content": st.session_state.prompt})
 
@@ -549,11 +544,14 @@ def on_input_change():
 
 
 # ----------------------------- audio input -------------------------------------
-st.session_state['user_input'] = ''
-st.session_state['is_audio_input'] = False
+if 'user_input' not in st.session_state:
+    st.session_state['user_input'] = ''
 
-if 'last_audio' not in st.session_state:
-    st.session_state['last_audio'] = ''
+if 'is_audio_input' not in st.session_state:
+    st.session_state['is_audio_input'] = False
+
+if 'audio_input' not in st.session_state:
+    st.session_state['audio_input'] = dict(content='', session=0)
 
 placeholder = st.container()
 with placeholder:
@@ -561,7 +559,7 @@ with placeholder:
 
 start_button.js_on_event("button_click", CustomJS(code=js_code))
 
-audio_result = streamlit_bokeh_events(
+st.session_state['audio_result'] = streamlit_bokeh_events(
     bokeh_plot = start_button,
     events="GET_TEXT,GET_ONREC,GET_INTRM",
     key="listen",
@@ -570,39 +568,34 @@ audio_result = streamlit_bokeh_events(
     debounce_time=500)
 
 
-if audio_result:
-    if "GET_ONREC" in audio_result and "GET_INTRM" in audio_result:
-        if audio_result["GET_ONREC"] == 'stop' and audio_result["GET_INTRM"] =='':
-            # print(st.session_state['last_audio'])
-            # print(audio_result['GET_TEXT']['t'])
-            if st.session_state['last_audio'] == audio_result['GET_TEXT']['t']:
-                audio_result = None
+if st.session_state['audio_result']:
+    if "GET_TEXT" in st.session_state['audio_result']:
+        if st.session_state['audio_result'].get("GET_TEXT")["t"] != '' and st.session_state['audio_result'].get("GET_TEXT")["s"] != st.session_state['audio_input']['session'] :
+            st.session_state['audio_input']['content'] = st.session_state['audio_result'].get("GET_TEXT")["t"]
+            st.session_state['audio_input']['session'] = st.session_state['audio_result'].get("GET_TEXT")["s"]
+            # st.session_state['user_input'] = st.session_state['audio_input']['content']
 
-# st.write(audio_result)
-if audio_result:
-    if 'GET_INTRM' in audio_result:
-        st.write(audio_result['GET_INTRM'])
-    
-    if "GET_ONREC" in audio_result:
-        if audio_result.get("GET_ONREC") == 'start':
+    if "GET_ONREC" in st.session_state['audio_result']:
+        if st.session_state['audio_result'].get("GET_ONREC") == 'start':
+            st.session_state['audio_input'] = dict(content='', session=0)
             st.session_state['is_audio_input'] = True
     
-        elif audio_result.get("GET_ONREC") == 'running':
+        elif st.session_state['audio_result'].get("GET_ONREC") == 'running':
             placeholder.image(os.path.join(project_path,'assert','sine_wave.gif'))
             st.session_state['is_audio_input'] = True
     
-        elif audio_result.get("GET_ONREC") == 'stop':
+        elif st.session_state['audio_result'].get("GET_ONREC") == 'stop':
             placeholder.image(os.path.join(project_path,'assert','end.jpg'))
-            if 'GET_TEXT' in audio_result:
-                st.session_state['user_input'] = audio_result['GET_TEXT']['t']
-                st.session_state['last_audio'] = audio_result['GET_TEXT']['t']
-                st.session_state['is_audio_input'] = False
-                audio_result = None
-                # print('here02 ： ',audio_result)
-else:
-    st.session_state['user_input'] = ''
+            st.session_state['user_input'] = st.session_state['audio_input']['content']
+            st.session_state['is_audio_input'] = False
+    
+            
 # -------------------------------------------------------------------------------
 
+st.write(st.session_state['audio_result'])
+
+if st.session_state['audio_input']['content']:
+    st.session_state['user_input'] = st.session_state['audio_input']['content']
 
 st.text_area(label='输入区域，发送信息: ctl + enter, 语音输入自动识别停止',on_change=on_input_change,key='user_input')
 
@@ -615,5 +608,6 @@ if not st.session_state.is_audio_input:
             wav_bytes = text2audio(msg['content'],os.path.join(project_path,'output','output.wav') )
             st.audio(wav_bytes, format="audio/wav", start_time=0)
         st.session_state['message_keys'] += 1
+
 
     
