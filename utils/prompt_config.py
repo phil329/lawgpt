@@ -11,7 +11,7 @@ knowledge_comment_prompt = '你是知识提示卡片，请回答涉及到的相�
 
 
 # 寻找相关案例的判罚情况
-related_result_prompt = '假如你是一个法官，请找出与下面诉讼请求相似内容的某一个案件的判罚情况，请注意不要给出下面案件的判罚及相关信息。'
+related_result_prompt = '请找出与下面诉讼请求相似内容的某案件的判罚情况'
 
 
 

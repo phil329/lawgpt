@@ -312,13 +312,13 @@ def excute_second():
         
         if res_1_2==1:
             st.session_state['is_person']=True
-            res_answer="谢谢您提供的信息！\n\n请告诉我 **自然人（个人）** 的如下信息\n* 姓名\n* 身份证号\n* 性别\n* 出生日期\n* 民族\n* 住址\n* 联系方式\n * 委托代理人（如有）\n * 法定代理人（如有）"
+            res_answer="| 姓名 | 性别 | 出生日期 | 民族 | 住址 | 联系方式 | 身份证号 | 法定代理人 | 委托诉讼代理人 |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| 刘小小 | 女 | 1922年10月10日 | 汉族 | 江西省赣州市赣县 | 12345678911 | 3636728298373 | 无 | 姓名: 张三事务所: 湖南锦泽律师事务所 |"
             st.session_state['gen_keymiss'] =["姓名", "性别", "出生日期", "民族", "住址","联系方式","委托诉讼代理人","身份证号","法定代理人"]
             st.session_state['last_gen_keymiss']=st.session_state['gen_keymiss']
             st.session_state['gen_keyget'] =[]
         elif res_1_2==2:
             st.session_state['is_company']=True
-            res_answer="谢谢您提供的信息！\n\n请先告诉我 **非自然人（公司）** 的如下信息：\n* 公司名称\n* 统一社会信用代码\n *公司所在地\n* 法人的姓名、职务、联系方式"
+            res_answer="谢谢您提供的信息！\n\n请先告诉我 **非自然人（公司）** 的如下信息：\n-  公司名称\n-  统一社会信用代码\n *公司所在地\n-  法人的姓名、职务、联系方式"
             st.session_state['gen_keymiss'] =["公司名称", "公司所在地","法人","委托诉讼代理人","统一社会信用代码"]
             st.session_state['last_gen_keymiss']=st.session_state['gen_keymiss']
             st.session_state['gen_keyget'] =[]
@@ -473,13 +473,13 @@ def excute_first():
             res_1_2=3
         if res_1_2==1:
             st.session_state['is_person']=True
-            res_answer="谢谢您提供的信息！\n\n请告诉我 **自然人（个人）** 的如下信息\n* 姓名\n* 身份证号\n* 性别\n* 出生日期\n* 民族\n* 住址\n* 联系方式\n * 委托代理人（如有）\n * 法定代理人（如有）"
+            res_answer="| 姓名 | 性别 | 出生日期 | 民族 | 住址 | 联系方式 | 身份证号 | 法定代理人 | 委托诉讼代理人 |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| 刘小小 | 女 | 1922年10月10日 | 汉族 | 江西省赣州市赣县 | 12345678911 | 3636728298373 | 无 | 姓名: 张三事务所: 湖南锦泽律师事务所 |"
             st.session_state['gen_keymiss'] =["姓名", "性别", "出生日期", "民族", "住址","联系方式","委托诉讼代理人","身份证号", "法定代理人" ]
             st.session_state['last_gen_keymiss']=st.session_state['gen_keymiss']
             st.session_state['gen_keyget'] =[]
         elif res_1_2==2:
             st.session_state['is_company']=True
-            res_answer="谢谢您提供的信息！\n\n请先告诉我 **非自然人（公司）** 的如下信息：\n* 公司名称\n* 统一社会信用代码\n * 公司所在地\n* 法人的姓名、职务、联系方式"
+            res_answer="谢谢您提供的信息！\n\n请先告诉我 **非自然人（公司）** 的如下信息：\n-  公司名称\n-  统一社会信用代码\n-  公司所在地\n-  法人的姓名、职务、联系方式"
             st.session_state['gen_keymiss'] =["公司名称", "公司所在地","法人","委托诉讼代理人", "统一社会信用代码"]
             st.session_state['last_gen_keymiss']=st.session_state['gen_keymiss']
             st.session_state['gen_keyget'] =[]
@@ -518,10 +518,7 @@ def excute_first():
         else:
             st.session_state['yuangao_list'].append(st.session_state['yuangao_data'])
             duo_yuangao="好的，我已经知道**第"+str(len(st.session_state['yuangao_list']))+"个原告**的信息了，请问你是否需要继续添加**原告**信息？"
-            json_data = json.dumps(st.session_state['yuangao_list'],ensure_ascii=False)
-            print(json_data)
-            json_data = json2md(json_data)
-            res_answer= duo_yuangao+"现在的原告的json文件如下"+ json_data
+            res_answer= duo_yuangao+"现在的原告的json文件如下"+ json2md(json.dumps(st.session_state['yuangao_list'],ensure_ascii=False))
 
             st.session_state['is_person']=True
             st.session_state['is_company']=True

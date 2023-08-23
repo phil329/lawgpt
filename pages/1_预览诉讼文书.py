@@ -34,18 +34,10 @@ with open(json_file) as f:
     json_data = json.load(f)
 
 # 案由
-st.subheader("案由")
-options = ('还不太清楚诶', '机动车交通事故责任纠纷', '民间借贷', '离婚纠纷', '合同纠纷')
 
-case_reason = json_data["案由"]
-if case_reason in options:
-    case_index = options.index(case_reason)
-else:
-    case_index=0
-    
-option = st.selectbox(
-    '当前案由是',
-    options, index=case_index)
+st.subheader("案由")
+case = st.text_input('当前的案由是', json_data["案由"])
+
 
 # 原告
 st.subheader("原告")
@@ -114,7 +106,7 @@ if st.button("保存"):
         defendant_data = unflatten_dataframe(defendant_df_list[i])
         json_data['被告'].append(defendant_data)
 
-    json_data['案由'] = option
+    json_data['案由'] = case
     json_data['诉讼请求'] = lawsuit_demands
     json_data['事实理由'] = factual_reasons
     json_data['证据'] = evidence

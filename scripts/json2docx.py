@@ -38,13 +38,14 @@ def json2docx(json_data, doc_file):
             doc = document.add_paragraph()
             doc.paragraph_format.first_line_indent = Pt(14) * 2
             doc.add_run('原告：').bold = True
-            doc.add_run(f"{plaintiff['公司名称'] or '公司名称：_______'}，"
-                        f"地址：{plaintiff['公司所在地'] or '________________'}。")
-            if '无' in plaintiff['法定代表人/法定代理人/法人']:
-                doc.add_run('无法定代表人/法定代理人/法人')
+            doc.add_run(f"公司名称：{plaintiff['公司名称'] or '__________'}，"
+                        f"地址：{plaintiff['公司所在地'] or '________________'}。"
+                        f"统一社会信用代码：{plaintiff['统一社会信用代码'] or '________________'}")
+            if '无' in plaintiff['法人']:
+                doc.add_run('无法人')
                 doc.paragraph_format.line_spacing = Pt(30) # 固定值30磅
             else:
-                doc.add_run(f"法定代表人/法定代理人/法人：{plaintiff['法定代表人/法定代理人/法人']['姓名'] or '法定代表人/法定代理人/法人姓名：_______'}，职务：{plaintiff['法定代表人/法定代理人/法人']['职务'] or '法定代表人/法定代理人/法人职务：______'}，联系方式：{plaintiff['法定代表人/法定代理人/法人']['联系方式'] or '法定代表人/法定代理人/法人：___________'}。")
+                doc.add_run(f"法人：{plaintiff['法人']['姓名'] or '_______'}，职务：{plaintiff['法人']['职务'] or '______'}，联系方式：{plaintiff['法人']['联系方式'] or '___________'}。")
                 doc.paragraph_format.line_spacing = Pt(30) # 固定值30磅
             if '无' in plaintiff['委托诉讼代理人']:
                 doc = document.add_paragraph(f"无委托诉讼代理人。")
@@ -61,7 +62,9 @@ def json2docx(json_data, doc_file):
             doc.add_run('原告：').bold = True
             doc.add_run(f"{plaintiff['姓名'] or '姓名：_______'}，{plaintiff['性别'] or '性别：__'}，{plaintiff['出生日期'] or '__________'}生，"
                         f"{plaintiff['民族'] or '____' + '族'}，现住{plaintiff['住址']or '_________________'}。"
-                        f"联系方式：{plaintiff['联系方式'] or '联系方式：_________'}")
+                        f"联系方式：{plaintiff['联系方式'] or '_________'}"
+                        f"身份证号：{plaintiff['身份证号'] or '________________'}"
+                        f"法定代理人：{plaintiff['法定代理人'] or '__________'}")
             doc.paragraph_format.line_spacing = Pt(30) # 固定值18磅
             if '无' in plaintiff['委托诉讼代理人']:
                 doc = document.add_paragraph(f"无委托诉讼代理人。")
@@ -82,13 +85,14 @@ def json2docx(json_data, doc_file):
             doc = document.add_paragraph()
             doc.paragraph_format.first_line_indent = Pt(14) * 2
             doc.add_run('被告：').bold = True
-            doc.add_run(f"{defendant['公司名称'] or '公司名称：_______'}，"
-                        f"地址：{defendant['公司所在地'] or '________________'}。")
-            if '无' in defendant['法定代表人/法定代理人/法人']:
-                doc.add_run('无法定代表人/法定代理人/法人。')
+            doc.add_run(f"公司名称：{defendant['公司名称'] or '__________'}，"
+                        f"地址：{defendant['公司所在地'] or '________________'}。"
+                        f"统一社会信用代码：{defendant['统一社会信用代码'] or '________________'}")
+            if '无' in defendant['法人']:
+                doc.add_run('无法人。')
                 doc.paragraph_format.line_spacing = Pt(30) # 固定值30磅
             else:
-                doc.add_run(f"法定代表人/法定代理人/法人：{defendant['法定代表人/法定代理人/法人']['姓名'] or '法定代表人/法定代理人/法人姓名：_______'}，职务：{defendant['法定代表人/法定代理人/法人']['职务'] or '法定代表人/法定代理人/法人职务：______'}，联系方式：{defendant['法定代表人/法定代理人/法人']['联系方式'] or '法定代表人/法定代理人/法人：___________'}。")
+                doc.add_run(f"法人：{defendant['法人']['姓名'] or '_______'}，职务：{defendant['法人']['职务'] or '______'}，联系方式：{defendant['法人']['联系方式'] or '___________'}。")
                 doc.paragraph_format.line_spacing = Pt(30) # 固定值30磅
             if '无' in defendant['委托诉讼代理人']:
                 doc = document.add_paragraph(f"无委托诉讼代理人。")
@@ -98,14 +102,16 @@ def json2docx(json_data, doc_file):
                 doc = document.add_paragraph(f"委托诉讼代理人：{defendant['委托诉讼代理人']['姓名']}，{defendant['委托诉讼代理人']['事务所']}。")
                 doc.paragraph_format.first_line_indent = Pt(14) * 2
                 doc.paragraph_format.line_spacing = Pt(30) # 固定值30磅
-
+        ## 个人
         else:
             doc = document.add_paragraph()
             doc.paragraph_format.first_line_indent = Pt(14) * 2
             doc.add_run('被告：').bold = True
-            doc.add_run(f"{defendant.get('姓名', '姓名：_______')}，{defendant.get('性别', '性别：__')}，{defendant.get('出生日期', '__________')}生，"
-                        f"{defendant.get('民族', '____族')}，现住{defendant['住址']or '_________________'}。"
-                        f"联系方式：{defendant.get('联系方式', '联系方式：_________')}")
+            doc.add_run(f"{defendant['姓名'] or '姓名：_______'}，{defendant['性别'] or '性别：__'}，{defendant['出生日期'] or '__________'}生，"
+                        f"{defendant['民族'] or '____' + '族'}，现住{defendant['住址']or '_________________'}。"
+                        f"联系方式：{defendant['联系方式'] or '_________'}"
+                        f"身份证号：{defendant['身份证号'] or '________________'}"
+                        f"法定代理人：{defendant['法定代理人'] or '__________'}")
             doc.paragraph_format.line_spacing = Pt(30) # 固定值18磅
             if '无' in defendant['委托诉讼代理人']:
                 doc = document.add_paragraph(f"无委托诉讼代理人。")

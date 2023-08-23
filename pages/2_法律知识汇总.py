@@ -22,23 +22,28 @@ json_file = os.path.join(project_path,'output','json_folder','person.json')
 with open(json_file,'r') as f:
     description = f.read()
 
-
-st.write(description)
-
-
-
-# 创建两个列
-left_column, right_column = st.columns(2)
-
-with left_column:
-    st.subheader('相关法律条款')
-    chat_list = [{'role':'user','content':knowledge_comment_prompt+description}]
-    res = api.main(chat_list)
-    st.write(res)
+# st.subheader('相关法律条款')
+chat_list = [{'role':'user','content':knowledge_comment_prompt+description}]
+res = api.main(chat_list)
+st.write(res)
 
 
-with right_column:
-    st.subheader('相关案例')
-    chat_list = [{'role':'user','content':related_result_prompt+description}]
-    res = api.main(chat_list)
-    st.write(res)
+
+# st.write(description)
+
+# # 创建两个列
+# left_column, right_column = st.columns(2)
+
+# with left_column:
+#     st.subheader('相关法律条款')
+#     chat_list = [{'role':'user','content':knowledge_comment_prompt+description}]
+#     res = api.main(chat_list)
+#     st.write(res)
+
+
+# with right_column:
+#     st.subheader('相关案例')
+#     chat_list = [{'role':'user','content':related_result_prompt+description}]
+#     # chat_list = [{'role':'user','content':'请给出与下面内容相似的某案件的判罚情况'+description}]
+#     res = api.main(chat_list)
+#     st.write(res)

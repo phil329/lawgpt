@@ -6,11 +6,26 @@ import pandas as pd
 law_claim = '免责声明：本文档是由人工智能语言模型生成的文本,我们无法保证生成的文本完全准确、完整或适用于特定目的。任何使用本文档的个人或组织应该自行判断并承担使用本文档所产生的风险。'
 
 def json2md(json_data):
-    markdown_text = "| 名称   | 内容            |\n"
-    markdown_text += "|-------|------------------|\n"
-    for key, value in json_data.items():
-        markdown_text += f"| {key}  | {value}{' ' * (18 - len(str(value)))}|\n"
+    json_data = extract_json_from_string(json_data)
 
+    if isinstance(json_data,str):
+    # if type(json_data) == "str":
+        print(json_data)
+        return "Invalid Str"
+    
+    json_data = flatten_dictionary(json_data)
+    md_table = "\n|描述| 内容 |\n|-----|-----------------|\n"
+    
+    for key, value in json_data.items():
+        if isinstance(value, dict):
+            value_str = ', '.join([f"{sub_key}: {sub_value}" for sub_key, sub_value in value.items()])
+        else:
+            value_str = value
+        
+        md_table += f"| {key} | {value_str} |\n"
+    
+    print(md_table)
+    return md_table
 
 def get_project_path(project_name='lawgpt_cp'):
 	# 获取当前文件的绝对路径

@@ -26,7 +26,7 @@ from datetime import datetime
 systime=pytz.timezone('Asia/shanghai')
 cur_time=datetime.utcnow()
 cur_beijing=cur_time.replace(tzinfo=pytz.utc).astimezone(systime)
-formattime=cur_beijing.strftime('%Y %m %d')
+formattime=cur_beijing.strftime('%Y年%m月%d日')
 
 project_path = get_project_path()
 
@@ -166,7 +166,8 @@ st.session_state["is_audio"] = (is_audio == 'Yes')
 
 
 # if 'category' not in st.session_state:
-options = ('我不太清楚诶','机动车交通事故责任纠纷', '民间借贷纠纷', '离婚纠纷')
+options = ('我不太清楚诶','机动车交通事故责任纠纷', '民间借贷纠纷', '离婚纠纷','合同纠纷','买卖合同纠纷','金融借款合同纠纷','借款合同纠纷','房屋买卖合同纠纷')
+
 option = st.sidebar.selectbox(
     '🙋如果确定，请选择要生成诉讼文书的案由',
     options)
@@ -190,6 +191,7 @@ def check_miss(data):
 
     if st.session_state['agent_flag_2']:
         if "法定代理人" in data:
+            print(data)
             if data["法定代理人"] is None:
                 data["法定代理人"] = "无"
         st.session_state['agent_flag_2'] = False
@@ -228,34 +230,48 @@ def excute_fourth():
 
 def excute_third():
     # 输入诉讼请求
-    if st.session_state['third_state_step'] == 1:  
-        res_answer="好的，我已经知道您的诉讼请求了，根据您的案由与诉讼请求，我为您生成了一份事实与理由模板：\n\n"
-        if st.session_state['category'] == "民间借贷纠纷":
-            res_answer += debt_usr_reason_prompt + "\n\n **请参考以上模板输入您的事实和理由。**"
+    
+    if st.session_state['third_state_step'] == 1:         
+        if st.session_state['third_state_data']["案由"] == "民间借贷纠纷":
             prompt = debt_usr_request_prompt
-        if st.session_state['category'] == "机动车交通事故责任纠纷":
-            res_answer += traffic_usr_reason_prompt + "\n\n **请参考以上模板输入您的事实和理由。**"
+        if st.session_state['third_state_data']["案由"] == "机动车交通事故责任纠纷":
             prompt = traffic_usr_request_prompt
-        if st.session_state['category'] == "离婚纠纷":
-            res_answer += divorce_usr_reason_prompt + "\n\n **请参考以上模板输入您的事实和理由。**"
+        if st.session_state['third_state_data']["案由"] == "离婚纠纷":
             prompt = divorce_usr_request_prompt
+        else:
+            prompt = ""
+        
+        
         new_prompt_json={'role': 'user', 'content': prompt+guide_second_step1+st.session_state.prompt}
         st.session_state['third_state_data']["诉讼请求"]=api.main([new_prompt_json])
         st.session_state['third_state_step'] = 2
 
-    
+        res_answer="好的，我已经知道您的诉讼请求了，根据您的案由，我为您生成了一份事实与理由模板：\n\n"
+        if st.session_state['category'] == "民间借贷纠纷":
+            res_answer += debt_usr_reason_prompt + "\n\n **请参考以上模板输入您的事实和理由。**"
+        elif st.session_state['category'] == "机动车交通事故责任纠纷":
+            res_answer += traffic_usr_reason_prompt + "\n\n **请参考以上模板输入您的事实和理由。**"
+        elif st.session_state['category'] == "离婚纠纷":
+            res_answer += divorce_usr_reason_prompt + "\n\n **请参考以上模板输入您的事实和理由。**"
+        else:
+            res_prompt={'role': 'user', 'content': "案件类型是"+st.session_state['third_state_data']['案由']+"，请给出在起诉书中典型的该类别案件的事实与理由，并分点陈述"}
+            res_ans=api.main([res_prompt])
+            res_answer += "**,提示如下：\n\n" + res_ans + "\n\n **请根据上述提示输入您的事实与理由。**"
+
     # 输入事实和理由
     elif st.session_state['third_state_step'] == 2:   
-        if st.session_state['category'] == "民间借贷纠纷":
+        if st.session_state['third_state_data']["案由"] == "民间借贷纠纷":
             prompt = debt_usr_reason_prompt
-        if st.session_state['category'] == "机动车交通事故责任纠纷":
+        if st.session_state['third_state_data']["案由"] == "机动车交通事故责任纠纷":
             prompt = traffic_usr_reason_prompt
-        if st.session_state['category'] == "离婚纠纷":
+        if st.session_state['third_state_data']["案由"] == "离婚纠纷":
             prompt = divorce_usr_reason_prompt
+        else:
+            prompt = ""
         new_prompt_json={'role': 'user', 'content': prompt+guide_second_step2+st.session_state.prompt}
         st.session_state['third_state_data']["事实理由"]=api.main([new_prompt_json])
         st.session_state['third_state_step']=3
-        res_answer="好的，我已经知道你的诉讼请求了。请进一步告诉我您诉讼的**相关证据**。"
+        res_answer="好的，我已经知道你的事实和理由了。请进一步告诉我您诉讼的**相关证据**。"
 
     elif st.session_state['third_state_step'] == 3:   
         new_prompt_json={'role': 'user', 'content': gudie_second_step3+st.session_state.prompt}
@@ -288,10 +304,10 @@ def excute_third():
         st.session_state['fourth_state']=True
         # st.session_state['yuangao_list'].append(st.session_state['yuangao_data'])
         # st.session_state['beigao_list'].append(st.session_state['beigao_data'])
-        res_answer="好的，已为你生成了诉讼书。案由、诉讼请求、事实和理由的相关信息如下"+json.dumps(st.session_state['third_state_data'],ensure_ascii=False)
+        res_answer="好的，已为你生成了诉讼书。案由、诉讼请求、事实和理由的相关信息如下"+json2md(json.dumps(st.session_state['third_state_data'],ensure_ascii=False))
         res_answer="好的，已为你生成了诉讼书,您可以前往预览界面进行预览,如果您想继续生成一份诉状书，可以点击左边开启新对话。或者你可以和我继续聊天，我很乐意和你讨论法律相关知识。"
     else:
-        res_answer="好的，已为你生成了诉讼书。案由、诉讼请求、事实和理由的相关信息如下"+json.dumps(st.session_state['third_state_data'],ensure_ascii=False)
+        res_answer="好的，已为你生成了诉讼书。案由、诉讼请求、事实和理由的相关信息如下"+json2md(json.dumps(st.session_state['third_state_data'],ensure_ascii=False))
     return res_answer
 
 def excute_second():
@@ -318,14 +334,14 @@ def excute_second():
             st.session_state['gen_keyget'] =[]
         elif res_1_2==2:
             st.session_state['is_company']=True
-            res_answer="谢谢您提供的信息！\n\n请先告诉我 **非自然人（公司）** 的如下信息：\n* 公司名称\n* 统一社会信用代码\n *公司所在地\n* 法人的姓名、职务、联系方式\n * 法定代理人（如有）"
+            res_answer="谢谢您提供的信息！\n\n请先告诉我 **非自然人（公司）** 的如下信息：\n* 公司名称\n* 统一社会信用代码\n *公司所在地\n* 法人的姓名、职务、联系方式\n * 委托诉讼代理人（如有）"
             st.session_state['gen_keymiss'] =["公司名称", "公司所在地","法人","委托诉讼代理人","统一社会信用代码"]
             st.session_state['last_gen_keymiss']=st.session_state['gen_keymiss']
             st.session_state['gen_keyget'] =[]
         else:
             st.session_state['is_person']=False
             st.session_state['is_company']=False
-            res_answer="不好意思，我不太清楚您的意思，请问被告的是个人还是公司呢"     
+            res_answer="不好意思，我不太清楚您的意思，请问该被告是个人还是公司呢"     
     
     elif st.session_state['is_person']==True and st.session_state['is_company']==False:
               
@@ -344,24 +360,24 @@ def excute_second():
             st.session_state['beigao_list'].append(st.session_state['beigao_data'])
             st.session_state['is_person']=True
             st.session_state['is_company']=True
-            res_answer="亲，发现您多次没有提供有效的"+','.jion(st.session_state['gen_keymiss'])+"信息，先帮你跳过吧！我已经知道第"+str(len(st.session_state['beigao_list']))+"个被告的信息了\n 请问你是否继续添加**被告**信息呢"
+            res_answer="亲，发现您多次没有提供有效的"+','.join(st.session_state['gen_keymiss'])+"信息，先帮你跳过吧！我已经知道第"+str(len(st.session_state['beigao_list']))+"个被告的信息了\n 请问你是否继续添加**被告**信息呢"
             return res_answer
         st.session_state['last_gen_keymiss']=st.session_state['gen_keymiss']
         if len(st.session_state['gen_keymiss'])!=0:
             # res_answer="现在还不知道您的被告人的"+'，'.join(st.session_state['gen_keymiss'])+"信息，您能告诉我吗？"
             if "委托诉讼代理人" in st.session_state['gen_keymiss']:
                 st.session_state['agent_flag_1'] = True
-                res_answer="请问自然人是否有**委托代理人**？"
+                res_answer="请问自然人是否有**委托代理人**？有的话请告诉我其**姓名**和**事务所。**"
             elif "法定代理人" in st.session_state['gen_keymiss']:
                 st.session_state['agent_flag_2'] = True
                 res_answer="请问自然人是否有**法定代理人**？"
             else:
-                res_answer="现在还不知道您的"+'，'.join(st.session_state['gen_keymiss'])+"信息，您能告诉我吗？"
+                res_answer="现在还不知道该被告的"+'，'.join(st.session_state['gen_keymiss'])+"信息，您能告诉我吗？"
         
         else:
             st.session_state['beigao_list'].append(st.session_state['beigao_data'])
-            duo_yuangao="好的，我已经知道第"+str(len(st.session_state['beigao_list']))+"个被告的信息了，请问你是否需要继续添加被告信息"
-            res_answer= duo_yuangao+"现在的被告的json文件如下"+json.dumps(st.session_state['beigao_list'],ensure_ascii=False)
+            duo_yuangao="好的，我已经知道第"+str(len(st.session_state['beigao_list']))+"个被告的信息了，信息如下。\n请问你是否需要继续添加被告信息？"
+            res_answer= duo_yuangao+json2md(json.dumps(st.session_state['beigao_data'],ensure_ascii=False))
             st.session_state['is_person']=True
             st.session_state['is_company']=True
     
@@ -381,25 +397,25 @@ def excute_second():
             st.session_state['beigao_list'].append(st.session_state['beigao_company_data'])
             st.session_state['is_person']=True
             st.session_state['is_company']=True
-            res_answer="亲，发现您多次没有提供有效的"+','.jion(st.session_state['gen_keymiss'])+"信息，先帮你跳过吧！我已经知道第"+str(len(st.session_state['beigao_list']))+"个被告的信息了\n 请问你是否继续添加**被告**信息呢"
+            res_answer="亲，发现您多次没有提供有效的"+','.join(st.session_state['gen_keymiss'])+"信息，先帮你跳过吧！我已经知道第"+str(len(st.session_state['beigao_list']))+"个被告的信息了\n 请问你是否继续添加**被告**信息呢"
             return res_answer
         st.session_state['last_gen_keymiss']=st.session_state['gen_keymiss']
         if len(st.session_state['gen_keymiss'])!=0:
             if "委托诉讼代理人" in st.session_state['gen_keymiss']:
                 st.session_state['agent_flag_1'] = True
-                res_answer="请问被告公司是否有委托代理人？"
+                res_answer="请问被告公司是否有委托代理人？有的话请告诉我其姓名和事务所"
             else:
                 res_answer="现在还不知道被告公司的"+'，'.join(st.session_state['gen_keymiss'])+"信息，您能告诉我吗？"
         else:
             st.session_state['beigao_list'].append(st.session_state['beigao_company_data'])
             duo_yuangao="好的，我已经知道第"+str(len(st.session_state['beigao_list']))+"个被告的信息了，请问你是否需要继续添加被告信息"
-            res_answer= duo_yuangao+"现在的被告的json文件如下"+json.dumps(st.session_state['beigao_list'],ensure_ascii=False)
+            res_answer= duo_yuangao+json2md(json.dumps(st.session_state['beigao_company_data'],ensure_ascii=False))
             st.session_state['is_person']=True
             st.session_state['is_company']=True
     elif st.session_state['is_person']==True and st.session_state['is_company']==True:
         if judge_p_c(res_judge_jj_3) and st.session_state['third_state_data']["案由"]==None:
             return "不好意思，没有听懂您的意思，请问你是否继续添加**被告**信息呢"
-        elif (res_judge_no_2) or st.session_state['third_state_data']["案由"]=="不清楚":
+        elif judge_p_c(res_judge_no_2) or st.session_state['third_state_data']["案由"]=="不清楚":
             res_json=2
         elif judge_p_c(res_judge_go_1):
             res_json=1
@@ -417,19 +433,29 @@ def excute_second():
             elif st.session_state['category']=="我不太清楚诶" and st.session_state['third_state_data']["案由"]=="不清楚":
                 new_prompt_json={'role': 'user', 'content': gudie_second_step0+st.session_state.prompt}
                 anyou_str=api.main([new_prompt_json])
-                # print(anyou_str)
-                anyou=extract_json_from_string(anyou_str)["案由"]
+                print("**********")
+                print(anyou_str)
+                try:
+                    anyou=extract_json_from_string(anyou_str)["案由"]
+                except:
+                    res_answer="不好意思，我没识别成功，麻烦您再输入一次，再给我个机会！"
+                    return res_answer
+                print(anyou)
                 st.session_state['third_state_data']["案由"]=anyou
-                res_answer="好的，已帮您识别案由为"+anyou
+                res_answer="好的，已帮您识别案由为**"+anyou
+                st.session_state['category']=anyou
                 if st.session_state['third_state_data']["案由"] in st.session_state['cause_of_action']:
                     if st.session_state['third_state_data']["案由"] == "民间借贷纠纷":
-                        res_answer += "**,提示如下：\n\n" + debt_usr_request_prompt + "\n\n **请根据上述提示输入您的上诉请求。**"
+                        res_answer += "**,根据您的案由，我为您生成了一份诉讼请求模板：\n\n" + debt_usr_request_prompt + "\n\n **请根据上述提示输入您的诉讼请求。**"
                     if st.session_state['third_state_data']["案由"] == "机动车交通事故责任纠纷":
-                        res_answer += "**,提示如下：\n\n" + traffic_usr_request_prompt + "\n\n **请根据上述提示输入您的上诉请求。**"
+                        res_answer += "**,根据您的案由，我为您生成了一份诉讼请求模板：\n\n" + traffic_usr_request_prompt + "\n\n **请根据上述提示输入您的诉讼请求。**"
                     if st.session_state['third_state_data']["案由"] == "离婚纠纷":
-                        res_answer += "**,提示如下：\n\n" + divorce_usr_request_prompt + "\n\n **请根据上述提示输入您的上诉请求。**"
+                        res_answer += "**,根据您的案由，我为您生成了一份诉讼请求模板：\n\n" + divorce_usr_request_prompt + "\n\n **请根据上述提示输入您的诉讼请求。**"
                 else:
-                    res_answer="好的，已帮您识别案由为"+anyou+",请继续输入您的诉讼请求。"
+                    anyou_prompt={'role': 'user', 'content': "案件类型是"+anyou+"，请给出在起诉书中典型的该类别案件的诉讼请求，并分点陈述"}
+                    anyou_res=api.main([anyou_prompt])
+                    res_answer += "**,根据您的案由，我为您生成了一份诉讼请求模板：\n\n" + anyou_res + "\n\n **请参考上述提示输入您的诉讼请求。**"
+                    # res_answer="好的，已帮您识别案由为"+anyou+",请继续输入您的诉讼请求。"
                 # st.session_state['third_state_step'] = 1
                 # res_answer="好的，已帮您识别案由为"+anyou+",能进一步给出您的**事实和理由**吗？"
                 st.session_state['third_state']=True
@@ -448,14 +474,16 @@ def excute_second():
                 # 获取案由的提示信息
                 if st.session_state['third_state_data']["案由"] in st.session_state['cause_of_action']:
                     if st.session_state['category'] == "民间借贷纠纷":
-                        res_answer += "**,提示如下：\n\n" + debt_usr_request_prompt + "\n\n **请根据上述提示输入您的上诉请求。**"
+                        res_answer += "**,提示如下：\n\n" + debt_usr_request_prompt + "\n\n **请根据上述提示输入您的诉讼请求。**"
                     if st.session_state['category'] == "机动车交通事故责任纠纷":
-                        res_answer += "**,提示如下：\n\n" + traffic_usr_request_prompt + "\n\n **请根据上述提示输入您的上诉请求。**"
+                        res_answer += "**,提示如下：\n\n" + traffic_usr_request_prompt + "\n\n **请根据上述提示输入您的诉讼请求。**"
                     if st.session_state['category'] == "离婚纠纷":
-                        res_answer += "**,提示如下：\n\n" + divorce_usr_request_prompt + "\n\n **请根据上述提示输入您的上诉请求。**"
+                        res_answer += "**,提示如下：\n\n" + divorce_usr_request_prompt + "\n\n **请根据上述提示输入您的诉讼请求。**"
                 else:
-                    res_answer+=",请继续输入您的诉讼请求。"
-
+                    anyou_prompt={'role': 'user', 'content': "案件类型是"+anyou+"，请给出在起诉书中典型的该类别案件的诉讼请求，并分点陈述"}
+                    anyou_res=api.main([anyou_prompt])
+                    res_answer += "**,根据您的案由，我为您生成了一份诉讼请求模板：\n\n" + anyou_res + "\n\n **请参考上述提示输入您的诉讼请求。**"
+                    
 
     return res_answer
 
@@ -480,7 +508,7 @@ def excute_first():
             st.session_state['gen_keyget'] =[]
         elif res_1_2==2:
             st.session_state['is_company']=True
-            res_answer="谢谢您提供的信息！\n\n请先告诉我 **非自然人（公司）** 的如下信息：\n* 公司名称\n* 统一社会信用代码\n * 公司所在地\n* 法人的姓名、职务、联系方式\n * 法定代理人（如有）"
+            res_answer="谢谢您提供的信息！\n\n请先告诉我 **非自然人（公司）** 的如下信息：\n* 公司名称\n* 统一社会信用代码\n * 公司所在地\n* 法人的姓名、职务、联系方式\n * 委托代理人（如有）"
             st.session_state['gen_keymiss'] =["公司名称", "公司所在地","法人","委托诉讼代理人", "统一社会信用代码"]
             st.session_state['last_gen_keymiss']=st.session_state['gen_keymiss']
             st.session_state['gen_keyget'] =[]
@@ -510,17 +538,17 @@ def excute_first():
         if len(st.session_state['gen_keymiss'])!=0:
             if "委托诉讼代理人" in st.session_state['gen_keymiss']:
                 st.session_state['agent_flag_1'] = True
-                res_answer="请问自然人是否有**委托代理人**？"
+                res_answer="请问该人是否有**委托代理人**？有的话请告诉我其姓名和事务所"
             elif "法定代理人" in st.session_state['gen_keymiss']:
                 st.session_state['agent_flag_2'] = True
-                res_answer="请问自然人是否有**法定代理人**？"
+                res_answer="请问该人是否有**法定代理人**？"
             else:
-                res_answer="现在还不知道您的"+'，'.join(st.session_state['gen_keymiss'])+"信息，您能告诉我吗？"
+                res_answer="现在还不知道该人的"+'，'.join(st.session_state['gen_keymiss'])+"信息，您能告诉我吗？"
         
         else:
             st.session_state['yuangao_list'].append(st.session_state['yuangao_data'])
             duo_yuangao="好的，我已经知道**第"+str(len(st.session_state['yuangao_list']))+"个原告**的信息了，请问你是否需要继续添加**原告**信息？"
-            res_answer= duo_yuangao #+"现在的原告的json文件如下"+json.dumps(st.session_state['yuangao_list'],ensure_ascii=False)
+            res_answer= duo_yuangao + json2md(json.dumps(st.session_state['yuangao_data'],ensure_ascii=False))
             st.session_state['is_person']=True
             st.session_state['is_company']=True
 
@@ -543,19 +571,19 @@ def excute_first():
             st.session_state['yuangao_list'].append(st.session_state['yuangao_company_data'])
             st.session_state['is_person']=True
             st.session_state['is_company']=True
-            res_answer="亲，发现您多次没有提供有效的"+','.jion(st.session_state['gen_keymiss'])+"信息，先帮你跳过吧！我已经知道第"+str(len(st.session_state['yuangao_list']))+"个被告的信息了\n 请问你是否继续添加**原告**信息呢"
+            res_answer="亲，发现您多次没有提供有效的"+','.join(st.session_state['gen_keymiss'])+"信息，先帮你跳过吧！我已经知道第"+str(len(st.session_state['yuangao_list']))+"个被告的信息了\n 请问你是否继续添加**原告**信息呢"
             return res_answer
         st.session_state['last_gen_keymiss']=st.session_state['gen_keymiss']
         if len(st.session_state['gen_keymiss'])!=0:
             if "委托诉讼代理人" in st.session_state['gen_keymiss']:
                 st.session_state['agent_flag_1'] = True
-                res_answer="请问您是否有**委托代理人**？"
+                res_answer="请问该公司是否有**委托代理人**？有的话请告诉我其姓名和事务所"
             else:
-                res_answer="现在还不知道您的"+'，'.join(st.session_state['gen_keymiss'])+"信息，您能告诉我吗？"
+                res_answer="现在还不知道该公司的"+'，'.join(st.session_state['gen_keymiss'])+"信息，您能告诉我吗？"
         else:
             st.session_state['yuangao_list'].append(st.session_state['yuangao_company_data'])
             duo_yuangao="好的，我已经知道第"+str(len(st.session_state['yuangao_list']))+"个原告的信息了，请问你是否需要继续添加原告信息"
-            res_answer= duo_yuangao+"现在的原告的json文件如下"+json.dumps(st.session_state['yuangao_list'],ensure_ascii=False)
+            res_answer= duo_yuangao+json2md(json.dumps(st.session_state['yuangao_company_data'],ensure_ascii=False))
             st.session_state['is_person']=True
             st.session_state['is_company']=True
     elif st.session_state['is_person']==True and st.session_state['is_company']==True:
@@ -581,6 +609,7 @@ def on_input_change():
 
     if len(st.session_state.user_input)==0:
         # 这种对应的情况是无端的空白输入变化，将空白信息输出了
+        #下面这个没问题！！！
         return
 
     st.session_state['prompt'] = st.session_state['user_input']
