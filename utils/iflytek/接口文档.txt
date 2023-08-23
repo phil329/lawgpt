@@ -1,0 +1,6 @@
+星火认知大模型API调用参考文档：https://www.xfyun.cn/doc/spark/Web.html
+
+
+
+python -m pip install websocket
+python -m pip install websocket_client
