@@ -191,7 +191,7 @@ def check_miss(data):
 
     if st.session_state['agent_flag_2']:
         if "法定代理人" in data:
-            print(data)
+            # print(data)
             if data["法定代理人"] is None:
                 data["法定代理人"] = "无"
         st.session_state['agent_flag_2'] = False
@@ -203,7 +203,12 @@ def check_miss(data):
         if x == "住址" or x == "公司所在地":
             new_prompt_json={'role': 'user', 'content': data[x]+address_complete_json}
             res_json = api.main([new_prompt_json])
-            data[x]=extract_json_from_string(res_json)["住址"]
+            try:
+                data[x]=extract_json_from_string(res_json)["住址"]
+            except:
+                data[x]=data[x]
+
+                
         if st.session_state['is_person']==True:
             if st.session_state['second_state']:
                 st.session_state['beigao_data'][x]=data[x]
@@ -334,7 +339,7 @@ def excute_second():
             st.session_state['gen_keyget'] =[]
         elif res_1_2==2:
             st.session_state['is_company']=True
-            res_answer="谢谢您提供的信息！\n\n请先告诉我 **非自然人（公司）** 的如下信息：\n* 公司名称\n* 统一社会信用代码\n *公司所在地\n* 法人的姓名、职务、联系方式\n * 委托诉讼代理人（如有）"
+            res_answer="谢谢您提供的信息！\n\n请先告诉我 **非自然人（公司）** 的如下信息：\n* 公司名称\n* 统一社会信用代码\n * 公司所在地\n* 法人的姓名、职务、联系方式\n * 委托诉讼代理人（如有）"
             st.session_state['gen_keymiss'] =["公司名称", "公司所在地","法人","委托诉讼代理人","统一社会信用代码"]
             st.session_state['last_gen_keymiss']=st.session_state['gen_keymiss']
             st.session_state['gen_keyget'] =[]
@@ -428,19 +433,19 @@ def excute_second():
         else:
             # 判断案由
             if st.session_state['category']=="我不太清楚诶" and st.session_state['third_state_data']["案由"]==None:
-                res_answer="好的,我已经收集好了你的被告信息了。这边检测到您还没有选择**案由**，您可以在左边选择案由，若不清楚案件类型请简单描述一下案件情况，我会帮你**智能识别**案由"
+                res_answer="好的,我已经收集好了你的被告信息了。这边检测到您还没有选择**案由**，您若不清楚案件类型,请简单描述一下案件情况，我会帮你**智能识别**案由"
                 st.session_state['third_state_data']["案由"]="不清楚"
             elif st.session_state['category']=="我不太清楚诶" and st.session_state['third_state_data']["案由"]=="不清楚":
                 new_prompt_json={'role': 'user', 'content': gudie_second_step0+st.session_state.prompt}
                 anyou_str=api.main([new_prompt_json])
-                print("**********")
-                print(anyou_str)
+                # print("**********")
+                # print(anyou_str)
                 try:
                     anyou=extract_json_from_string(anyou_str)["案由"]
                 except:
                     res_answer="不好意思，我没识别成功，麻烦您再输入一次，再给我个机会！"
                     return res_answer
-                print(anyou)
+                # print(anyou)
                 st.session_state['third_state_data']["案由"]=anyou
                 res_answer="好的，已帮您识别案由为**"+anyou
                 st.session_state['category']=anyou
@@ -508,7 +513,7 @@ def excute_first():
             st.session_state['gen_keyget'] =[]
         elif res_1_2==2:
             st.session_state['is_company']=True
-            res_answer="谢谢您提供的信息！\n\n请先告诉我 **非自然人（公司）** 的如下信息：\n* 公司名称\n* 统一社会信用代码\n * 公司所在地\n* 法人的姓名、职务、联系方式\n * 委托代理人（如有）"
+            res_answer="谢谢您提供的信息！\n\n请先告诉我 **非自然人（公司）** 的如下信息：\n* 公司名称\n* 统一社会信用代码\n* 公司所在地\n* 法人的姓名、职务、联系方式\n * 委托代理人（如有）"
             st.session_state['gen_keymiss'] =["公司名称", "公司所在地","法人","委托诉讼代理人", "统一社会信用代码"]
             st.session_state['last_gen_keymiss']=st.session_state['gen_keymiss']
             st.session_state['gen_keyget'] =[]
@@ -555,9 +560,9 @@ def excute_first():
     elif st.session_state['is_person']==False and st.session_state['is_company']==True:
         new_prompt_json={'role': 'user', 'content': gudie_yuangao_company_json+st.session_state["prompt2usr"]+st.session_state.prompt}
         res_json = api.main([new_prompt_json])
-        print("-----------")
-        print(res_json)
-        print("-----------")
+        # print("-----------")
+        # print(res_json)
+        # print("-----------")
         data=extract_json_from_string(res_json)
         check_miss(data)
         if st.session_state['last_gen_keymiss']==st.session_state['gen_keymiss']:
@@ -595,7 +600,7 @@ def excute_first():
             res_json=1
         else:
             return "不好意思，没有听懂您的意思，请问你是否继续添加**原告**信息呢"
-        print("res_json",res_json)
+        # print("res_json",res_json)
         if res_json==1:
             res_answer="好的,我会继续为你添加**原告**信息,请问你还想添加**个人**还是**公司**呢？"
         else:

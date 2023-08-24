@@ -89,7 +89,7 @@ def on_message(ws, message):
         choices = data["payload"]["choices"]
         status = choices["status"]
         content = choices["text"][0]["content"]
-        print(content,end ="")
+        # print(content,end ="")
         global answer
         answer += content
         # print(1)
