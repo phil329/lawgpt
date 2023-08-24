@@ -238,9 +238,9 @@ def excute_third():
     
     if st.session_state['third_state_step'] == 1:         
         if st.session_state['third_state_data']["案由"] == "民间借贷纠纷":
-            prompt = debt_usr_request_prompt
+            prompt = debt_usr_request_prompt + debt_usr_request_example
         if st.session_state['third_state_data']["案由"] == "机动车交通事故责任纠纷":
-            prompt = traffic_usr_request_prompt
+            prompt = traffic_usr_request_prompt + traffic_usr_request_example
         if st.session_state['third_state_data']["案由"] == "离婚纠纷":
             prompt = divorce_usr_request_prompt
         else:
@@ -253,9 +253,9 @@ def excute_third():
 
         res_answer="好的，我已经知道您的诉讼请求了，根据您的案由，我为您生成了一份事实与理由模板：\n\n"
         if st.session_state['category'] == "民间借贷纠纷":
-            res_answer += debt_usr_reason_prompt + "\n\n **请参考以上模板输入您的事实和理由。**"
+            res_answer += debt_usr_reason_prompt + "\n\n**样本如下：**\n" + debt_usr_reason_example +"\n\n **请参考以上模板输入您的事实和理由。**"
         elif st.session_state['category'] == "机动车交通事故责任纠纷":
-            res_answer += traffic_usr_reason_prompt + "\n\n **请参考以上模板输入您的事实和理由。**"
+            res_answer += traffic_usr_reason_prompt + "\n\n**样本如下：**\n" + traffic_usr_reason_example + "\n\n **请参考以上模板输入您的事实和理由。**"
         elif st.session_state['category'] == "离婚纠纷":
             res_answer += divorce_usr_reason_prompt + "\n\n **请参考以上模板输入您的事实和理由。**"
         else:
@@ -266,9 +266,9 @@ def excute_third():
     # 输入事实和理由
     elif st.session_state['third_state_step'] == 2:   
         if st.session_state['third_state_data']["案由"] == "民间借贷纠纷":
-            prompt = debt_usr_reason_prompt
+            prompt = debt_usr_reason_prompt + debt_usr_reason_example
         if st.session_state['third_state_data']["案由"] == "机动车交通事故责任纠纷":
-            prompt = traffic_usr_reason_prompt
+            prompt = traffic_usr_reason_prompt + traffic_usr_reason_example
         if st.session_state['third_state_data']["案由"] == "离婚纠纷":
             prompt = divorce_usr_reason_prompt
         else:
@@ -479,9 +479,9 @@ def excute_second():
                 # 获取案由的提示信息
                 if st.session_state['third_state_data']["案由"] in st.session_state['cause_of_action']:
                     if st.session_state['category'] == "民间借贷纠纷":
-                        res_answer += "**,提示如下：\n\n" + debt_usr_request_prompt + "\n\n **请根据上述提示输入您的诉讼请求。**"
+                        res_answer += "**,提示如下：\n\n" + debt_usr_request_prompt + "\n\n**样本如下：**\n" + debt_usr_reason_example + "\n\n **请根据上述提示输入您的诉讼请求。**"
                     if st.session_state['category'] == "机动车交通事故责任纠纷":
-                        res_answer += "**,提示如下：\n\n" + traffic_usr_request_prompt + "\n\n **请根据上述提示输入您的诉讼请求。**"
+                        res_answer += "**,提示如下：\n\n" + traffic_usr_request_prompt + "\n\n**样本如下：**\n" + traffic_usr_request_example + "\n\n **请根据上述提示输入您的诉讼请求。**"
                     if st.session_state['category'] == "离婚纠纷":
                         res_answer += "**,提示如下：\n\n" + divorce_usr_request_prompt + "\n\n **请根据上述提示输入您的诉讼请求。**"
                 else:
@@ -678,11 +678,11 @@ if audio_result:
             st.session_state['is_audio_input'] = True
     
         elif audio_result.get("GET_ONREC") == 'running':
-            placeholder.image(os.path.join(project_path,'assert','sine_wave.gif'))
+            # placeholder.image(os.path.join(project_path,'assert','sine_wave.gif'))
             st.session_state['is_audio_input'] = True
     
         elif audio_result.get("GET_ONREC") == 'stop':
-            placeholder.image(os.path.join(project_path,'assert','end.jpg'))
+            # placeholder.image(os.path.join(project_path,'assert','end.jpg'))
             if 'GET_TEXT' in audio_result:
                 st.session_state['user_input'] = audio_result['GET_TEXT']['t']
                 st.session_state['last_audio'] = audio_result['GET_TEXT']['t']

@@ -27,7 +27,7 @@ def json2md(json_data):
     print(md_table)
     return md_table
 
-def get_project_path(project_name='lawgpt_cp'):
+def get_project_path(project_name='lawgpt_win'):
 	# 获取当前文件的绝对路径
 	p_path = os.path.abspath(os.path.dirname(__file__)) 
 	# 通过字符串截取方式获取
@@ -68,7 +68,7 @@ def json2file(yuangao,beigao,second_state):
     generate_json_file(json_data, os.path.join(project_path,'output','json_folder','person.json'))
 
 def generate_json_file(data, filename):
-    with open(filename, 'w') as f:
+    with open(filename, 'w',encoding='utf8') as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
 
 

@@ -30,7 +30,7 @@ def save_data(case_title, lawsuit_demands, factual_reasons, evidence):
     # 在这里执行保存逻辑，例如将数据保存到文件或数据库中
     pass
 
-with open(json_file) as f:
+with open(json_file,'r',encoding='utf8') as f:
     json_data = json.load(f)
 
 # 案由

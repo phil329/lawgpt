@@ -33,6 +33,7 @@ from pydub import AudioSegment
 from utils.tools import get_project_path
 
 demo_pcm_file = os.path.join(get_project_path(),'output','demo.pcm')
+print(demo_pcm_file)
 
 
 STATUS_FIRST_FRAME = 0  # 第一帧的标识
