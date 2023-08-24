@@ -125,9 +125,9 @@ def gen_params(appid, domain,question):
 
 class Spark(object):
     def __init__(self):
-        self.appid = "e97d3136"
-        self.api_key = "b25338415789cf13a0091d64a1b3381e"
-        self.api_secret = "MDExMGZmZjFjMzRhOTkzNzczMGEyMzgw"
+        self.appid = "appid"
+        self.api_key = "api_key"
+        self.api_secret = "api_secret"
 
         # 用于配置大模型版本，默认“generalv2”  云端环境的服务地址
         self.domain = "generalv2"
